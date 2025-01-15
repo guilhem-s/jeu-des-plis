@@ -1,0 +1,33 @@
+/* src/components/Lobby/Lobby.css */
+
+.lobby {
+    text-align: center;
+    margin-top: 50px;
+  }
+  
+  .lobby-form {
+    display: inline-block;
+    text-align: left;
+  }
+  
+  .lobby-form input {
+    display: block;
+    margin: 10px 0;
+    padding: 8px;
+    width: 200px;
+  }
+  
+  .lobby-buttons {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .lobby-buttons button {
+    margin: 5px 0;
+    padding: 10px;
+  }
+  
+  .lobby-buttons input {
+    margin: 10px 0;
+  }
+  

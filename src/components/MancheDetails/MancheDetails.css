@@ -1,0 +1,38 @@
+/* src/components/MancheDetails/MancheDetails.css */
+
+.manche-details {
+  position: relative;
+  background: linear-gradient(145deg, #222, #444); /* Fond avec dégradé */
+  padding: 15px; /* Réduction du padding */
+  border-radius: 8px; /* Coins arrondis */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Ombre extérieure */
+  color: #fff;
+  font-family: 'Arial', sans-serif;
+  font-size: 12px; /* Taille de police réduite */
+  width: 120px; /* Largeur ajustée */
+}
+
+.manche-details h3 {
+  font-size: 14px; /* Taille de police réduite */
+  margin-bottom: 8px; /* Espacement réduit */
+  color: #ffc107; /* Couleur accentuée pour les titres */
+}
+
+.manche-details .atout-container {
+  display: flex; /* Alignement horizontal des éléments */
+  align-items: center; /* Alignement vertical centré */
+  gap: 10px; /* Espace entre "Atout :" et l'image */
+  margin-top: 8px; /* Réduction de l'espacement au-dessus */
+  background-color: #333; /* Fond sombre pour le conteneur */
+  padding: 8px; /* Ajout de padding pour l'encadré */
+  border-radius: 6px; /* Coins arrondis */
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3); /* Ombre intérieure */
+}
+
+.card-image {
+  width: 40px; /* Taille réduite pour une présentation compacte */
+  height: auto;
+  border: 1px solid #ccc;
+  border-radius: 4px; /* Coins légèrement arrondis */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Ombre externe pour la carte */
+}

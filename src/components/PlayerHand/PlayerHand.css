@@ -1,0 +1,18 @@
+/* src/components/PlayerHand/PlayerHand.css */
+.player-hand {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: nowrap; /* Empêche les cartes de passer à la ligne suivante */
+  gap: var(--player-hand-gap, 50px); /* Utilise la variable pour contrôler l'espacement */
+  transform: scale(var(--player-hand-size, 1)); /* Utilise la variable pour contrôler la taille */
+}
+
+.player-hand .card img {
+  width: 40px; /* Réduction de la largeur par défaut */
+  height: auto;
+}
+
+.current-player .card img {
+  width: 50px; /* Réduction de la taille des cartes pour le joueur actuel */
+}

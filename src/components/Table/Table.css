@@ -1,0 +1,66 @@
+/* src/components/Table/Table.css */
+
+/* Conteneur principal */
+.table {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background-color: green;
+  overflow: hidden;
+}
+
+/* Conteneur de la main du joueur */
+.player-hand-container {
+  position: absolute;
+  width: 150px; /* Ajustez en fonction de la taille des cartes */
+  text-align: center;
+}
+/* Aligner les cartes sur une seule ligne */
+.player-hand-container .player-hand {
+  display: flex; /* Définit un conteneur flex pour aligner les cartes en ligne */
+  justify-content: center; /* Centre les cartes horizontalement */
+  align-items: center; /* Aligne verticalement si nécessaire */
+  gap: 10px; /* Espacement entre les cartes */
+}
+
+
+.current-player {
+  z-index: 10; /* Assurez-vous que la main du joueur est au-dessus */
+}
+
+/* Style pour le nom du joueur */
+.player-name {
+  font-size: 1rem;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0px 0px 3px black;
+  margin-bottom: 20px; /* Espace au-dessus des cartes */
+}
+
+/* Box in front of each player to display the last played card */
+.played-card-box {
+  width: 60px;
+  height: 90px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.1); /* Transparent background */
+  border: 2px dashed rgba(255, 255, 255, 0.3); /* Light dashed border */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+/* Placeholder when no card is played yet */
+.empty-card-box {
+  font-size: 2rem;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+}
+
+/* Ensure the card fits perfectly in the box */
+.played-card-box img {
+  width: 100%;
+  height: auto;
+  border-radius: 5px;
+}

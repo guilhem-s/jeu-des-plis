@@ -1,0 +1,61 @@
+/* Réinitialisation des marges et du padding */
+body, html {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Overlay couvrant toute la page */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw; /* Utilisation de vw pour couvrir tout l'écran */
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6); /* Fond semi-transparent */
+  display: flex;
+  align-items: center; /* Centrage vertical */
+  justify-content: center; /* Centrage horizontal */
+  z-index: 1000; /* Doit être supérieur aux autres éléments */
+}
+
+/* Contenu du modal */
+.announcement-modal {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+}
+
+.announcement-modal h2 {
+  font-size: 1.5em;
+  color: #1e1e2f;
+  margin-bottom: 15px;
+}
+
+.announcement-modal .options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.announcement-modal button {
+  background-color: #282b4f;
+  color: #f0f0f0;
+  border: none;
+  padding: 10px 15px;
+  font-size: 1em;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.announcement-modal button:hover {
+  background-color: #f8d12f;
+  color: #1e1e2f;
+  transform: scale(1.1);
+}

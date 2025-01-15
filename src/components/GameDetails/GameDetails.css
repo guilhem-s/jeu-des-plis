@@ -1,0 +1,87 @@
+/* src/components/GameDetails/GameDetails.css */
+
+.game-details {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: linear-gradient(145deg, #222, #444);
+    padding: 15px; /* Réduction du padding */
+    border-radius: 8px; /* Coins légèrement moins arrondis */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    color: #fff;
+    width: 180px; /* Réduction de la largeur */
+    font-family: 'Arial', sans-serif;
+    font-size: 12px; /* Taille de police réduite */
+  }
+  
+  .game-details h3 {
+    font-size: 14px; /* Taille de police réduite pour les titres */
+    margin-bottom: 8px; /* Réduction de l'espacement */
+    color: #ffc107;
+  }
+  
+  .game-id-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px; /* Réduction de l'espacement */
+    background-color: #333;
+    padding: 8px; /* Réduction du padding */
+    border-radius: 6px; /* Coins légèrement moins arrondis */
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+  
+  .game-id {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .game-id span {
+    z-index: 10;
+    font-size: 14px; /* Taille de police réduite */
+    font-weight: bold;
+    color: #ffffff;
+  }
+  
+  .copy-button {
+    z-index: 10;
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    border-radius: 4px; /* Coins légèrement moins arrondis */
+    padding: 6px 10px; /* Réduction du padding */
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 12px; /* Taille de police réduite */
+  }
+  
+  .copy-button:hover {
+    background-color: #218838;
+  }
+  
+  .players-list {
+    margin-top: 15px; /* Réduction de l'espacement */
+  }
+  
+  .players-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .player-item {
+    background: #333;
+    padding: 8px; /* Réduction du padding */
+    border-radius: 4px; /* Coins légèrement moins arrondis */
+    margin-bottom: 6px; /* Réduction de l'espacement */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    color: #fff;
+    font-size: 12px; /* Taille de police réduite */
+  }
+  
+  .player-item:hover {
+    background: #444;
+    transform: scale(1.02);
+    transition: all 0.2s ease-in-out;
+  }
+  

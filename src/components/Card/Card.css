@@ -1,0 +1,45 @@
+/* Card.css */
+.card-container {
+  display: inline-block;
+  transition: transform 0.2s ease, width 0.2s ease;
+}
+
+/* Styles spécifiques au joueur courant */
+.player-hand.current-player .card-container {  
+  margin: 14px;
+  border: 2px solid green;
+  box-shadow: 0 0 10px green;
+}
+
+/* Styles spécifiques aux autres joueurs */
+.player-hand.other-player .card-container {
+  width: 20px;
+  height: auto;
+  margin: 10px;
+  border: 2px solid gray;
+  box-shadow: 0 0 5px gray;
+}
+
+.card-container img {
+  width: 50px;
+  height: auto;
+  transition: transform 0.2s ease;
+}
+
+/* Highlight playable cards */
+.card-container.playable:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 10px yellow;
+  cursor: pointer;
+}
+
+/* Grayed-out non-playable cards */
+.card-container.grayed img {
+  opacity: 0.4;
+  filter: grayscale(80%);
+  cursor: not-allowed;
+}
+
+.card-container:not(.playable) {
+  cursor: default;
+}

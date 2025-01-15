@@ -1,0 +1,1146 @@
+- Nom du sous dossier: AnnouncementModal
+Code du css:
+/* Réinitialisation des marges et du padding */
+body, html {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Overlay couvrant toute la page */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw; /* Utilisation de vw pour couvrir tout l'écran */
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6); /* Fond semi-transparent */
+  display: flex;
+  align-items: center; /* Centrage vertical */
+  justify-content: center; /* Centrage horizontal */
+  z-index: 1000; /* Doit être supérieur aux autres éléments */
+}
+
+/* Contenu du modal */
+.announcement-modal {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+}
+
+.announcement-modal h2 {
+  font-size: 1.5em;
+  color: #1e1e2f;
+  margin-bottom: 15px;
+}
+
+.announcement-modal .options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.announcement-modal button {
+  background-color: #282b4f;
+  color: #f0f0f0;
+  border: none;
+  padding: 10px 15px;
+  font-size: 1em;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.announcement-modal button:hover {
+  background-color: #f8d12f;
+  color: #1e1e2f;
+  transform: scale(1.1);
+}
+
+Code du jsx:
+import React from 'react';
+import ReactDOM from 'react-dom';
+import './AnnouncementModal.css';
+
+function AnnouncementModal({
+  isOpen,
+  onAnnounce,
+  totalPlayers,
+  manche,
+  announcements,
+}) {
+  if (!isOpen) return null;
+
+  const totalAnnouncements = announcements.reduce(
+    (sum, ann) => sum + ann.announcedTricks,
+    0
+  );
+  const isLastPlayer = announcements.length === totalPlayers - 1;
+
+  const options = [];
+  for (let i = 0; i <= manche; i++) {
+    if (isLastPlayer && totalAnnouncements + i === manche) {
+      continue;
+    }
+    options.push(i);
+  }
+
+  const modalContent = (
+    <div className="modal-overlay">
+      <div className="announcement-modal">
+        <h2>📢 Faites votre annonce</h2>
+        <div className="options">
+          {options.map((val) => (
+            <button key={val} onClick={() => onAnnounce(val)}>
+              {val}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  return ReactDOM.createPortal(modalContent, document.body);
+}
+
+export default AnnouncementModal;
+
+
+- Nom du sous dossier: Card
+Code du css:
+/* Card.css */
+.card-container {
+  display: inline-block;
+  transition: transform 0.2s ease, width 0.2s ease;
+}
+
+/* Styles spécifiques au joueur courant */
+.player-hand.current-player .card-container {  
+  margin: 14px;
+  border: 2px solid green;
+  box-shadow: 0 0 10px green;
+}
+
+/* Styles spécifiques aux autres joueurs */
+.player-hand.other-player .card-container {
+  width: 20px;
+  height: auto;
+  margin: 10px;
+  border: 2px solid gray;
+  box-shadow: 0 0 5px gray;
+}
+
+.card-container img {
+  width: 50px;
+  height: auto;
+  transition: transform 0.2s ease;
+}
+
+/* Highlight playable cards */
+.card-container.playable:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 10px yellow;
+  cursor: pointer;
+}
+
+/* Grayed-out non-playable cards */
+.card-container.grayed img {
+  opacity: 0.4;
+  filter: grayscale(80%);
+  cursor: not-allowed;
+}
+
+.card-container:not(.playable) {
+  cursor: default;
+}
+Code du jsx:
+// Card.js
+import React from 'react';
+import './Card.css';
+
+function Card({ card, isPlayable, isGrayed, onClick }) {
+  const handleCardClick = () => {
+    if (isPlayable && onClick) {
+      onClick(card);
+    }
+  };
+
+  return (
+    <div
+      className={`card-container ${isPlayable ? 'playable' : ''} ${isGrayed ? 'grayed' : ''}`}
+      onClick={handleCardClick}
+    >
+      <img
+        src={
+          card.valeur === 'verso' && card.couleur === 'carte'
+            ? '/images/cartes/verso.svg'
+            : `/images/cartes/${card.valeur}_${card.couleur}.svg`
+        }
+        alt={card.valeur === 'verso' ? 'Dos de carte' : `${card.valeur} de ${card.couleur}`}
+        className="card-image"
+      />
+    </div>
+  );
+}
+
+export default Card;
+
+
+- Nom du sous dossier: GameDetails
+Code du css:
+/* src/components/GameDetails/GameDetails.css */
+
+.game-details {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: linear-gradient(145deg, #222, #444);
+    padding: 15px; /* Réduction du padding */
+    border-radius: 8px; /* Coins légèrement moins arrondis */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    color: #fff;
+    width: 180px; /* Réduction de la largeur */
+    font-family: 'Arial', sans-serif;
+    font-size: 12px; /* Taille de police réduite */
+  }
+  
+  .game-details h3 {
+    font-size: 14px; /* Taille de police réduite pour les titres */
+    margin-bottom: 8px; /* Réduction de l'espacement */
+    color: #ffc107;
+  }
+  
+  .game-id-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px; /* Réduction de l'espacement */
+    background-color: #333;
+    padding: 8px; /* Réduction du padding */
+    border-radius: 6px; /* Coins légèrement moins arrondis */
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+  
+  .game-id {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .game-id span {
+    z-index: 10;
+    font-size: 14px; /* Taille de police réduite */
+    font-weight: bold;
+    color: #ffffff;
+  }
+  
+  .copy-button {
+    z-index: 10;
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    border-radius: 4px; /* Coins légèrement moins arrondis */
+    padding: 6px 10px; /* Réduction du padding */
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 12px; /* Taille de police réduite */
+  }
+  
+  .copy-button:hover {
+    background-color: #218838;
+  }
+  
+  .players-list {
+    margin-top: 15px; /* Réduction de l'espacement */
+  }
+  
+  .players-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .player-item {
+    background: #333;
+    padding: 8px; /* Réduction du padding */
+    border-radius: 4px; /* Coins légèrement moins arrondis */
+    margin-bottom: 6px; /* Réduction de l'espacement */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    color: #fff;
+    font-size: 12px; /* Taille de police réduite */
+  }
+  
+  .player-item:hover {
+    background: #444;
+    transform: scale(1.02);
+    transition: all 0.2s ease-in-out;
+  }
+  
+Code du jsx:
+// src/components/GameDetails/GameDetails.js
+
+import React from 'react';
+import './GameDetails.css';
+
+function GameDetails({ gameId, players }) {
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(gameId)
+  };
+
+  return (
+    <div className="game-details">
+      <div className="game-id-container">
+        <div className="game-id">
+          <h3>Partie ID :</h3>
+          <span>{gameId}</span>
+        </div>
+        <button onClick={copyToClipboard} className="copy-button">Copier</button>
+      </div>
+      <div className="players-list">
+        <h3>Joueurs</h3>
+        <ul>
+          {players.map((player) => (
+            <li key={player.playerId} className="player-item">
+              {player.name}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+export default GameDetails;
+
+
+- Nom du sous dossier: GameRoom
+Code du css:
+/* Gameboard at the bottom */
+.game-room {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #006400; /* Tapis vert */
+  z-index: 1; /* Gameboard is the base layer */
+}
+
+/* Table one layer above Gameboard */
+.table-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  z-index: 2; /* Table just above Gameboard */
+}
+
+/* Manche Details (Top Left) */
+.manche-details {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 3; /* Above Table */
+}
+
+/* Game Details (Top Right) */
+.game-details {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3; /* Above Table */
+}
+
+/* ScoreBoard (Bottom Left) */
+.scoreboard-container {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  z-index: 3; /* Above Table */
+}
+
+/* Waiting Area */
+.waiting-area {
+  text-align: center;
+  color: #fff;
+  z-index: 3; /* Above Table */
+}
+
+/* Buttons in Waiting Area */
+.waiting-area button {
+  z-index: 4; /* On top of all UI for interaction */
+  padding: 10px 20px;
+  font-size: 1em;
+  background-color: #f8d12f;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.waiting-area button:hover {
+  background-color: #e0b91e;
+}
+
+/* Announcement Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5; /* Always on top */
+}
+
+/* Text Color */
+.game-room h3,
+.game-room p {
+  color: #fff;
+}
+
+Code du jsx:
+// src/components/GameRoom/GameRoom.js
+
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, useLocation } from 'react-router-dom';
+import { socket } from '../../socket';
+import Table from '../Table/Table';
+import ScoreBoard from '../ScoreBoard/ScoreBoard';
+import AnnouncementModal from '../AnnouncementModal/AnnouncementModal';
+import MancheDetails from '../MancheDetails/MancheDetails';
+import GameDetails from '../GameDetails/GameDetails';
+import './GameRoom.css';
+
+function GameRoom() {
+  const { gameId } = useParams();
+  const location = useLocation();
+  const { playerName, localPlayerId } = location.state || {};
+
+  const [players, setPlayers] = useState([]);
+  const [gameState, setGameState] = useState({ isStarted: false, atout: null, demandedCouleur: null });
+  const [manche, setManche] = useState(1);
+  const [hand, setHand] = useState([]);
+  const [cardsPlayed, setCardsPlayed] = useState([]);
+  const [demandedCouleur, setDemandedCouleur] = useState(null);
+
+
+  const [isAnnouncementModalOpen, setIsAnnouncementModalOpen] = useState(false);
+  const [announcements, setAnnouncements] = useState([]);
+  const [currentAnnouncementPlayerId, setCurrentAnnouncementPlayerId] = useState(null);
+  const [currentPlayerId, setCurrentPlayerId] = useState(null);
+
+  const playersRef = useRef(players);
+
+  useEffect(() => {
+    playersRef.current = players;
+  }, [players]);
+
+  // Rejoindre la partie et écouter les événements socket
+  useEffect(() => {
+    if (!gameId || !playerName) {
+      console.error('Game ID or player name is missing.');
+      return;
+    }
+
+    // Joindre la partie une seule fois lors du montage
+    socket.emit('joinGame', { gameId, playerName });
+
+    // Gestionnaires d'événements
+    const handleUpdatePlayers = (playersList) => setPlayers(playersList);
+    const handleDealCards = (cards) => setHand(cards);
+    const handleUpdateManche = ({ manche }) => setManche(manche);
+
+    // Inscription des écouteurs d'événements
+    socket.on('updatePlayers', handleUpdatePlayers);
+    socket.on('dealCards', handleDealCards);
+    socket.on('updateManche', handleUpdateManche);
+
+    // Nettoyage lors du démontage
+    return () => {
+      socket.off('updatePlayers', handleUpdatePlayers);
+      socket.off('dealCards', handleDealCards);
+      socket.off('updateManche', handleUpdateManche);
+    };
+  }, [gameId, playerName]);
+
+  useEffect(() => {
+    const handleUpdateGameState = (state) => {
+      setGameState((prevState) => ({
+        ...prevState,
+        ...state,
+      }));
+    };
+  
+    socket.on('updateGameState', handleUpdateGameState);
+  
+    return () => {
+      socket.off('updateGameState', handleUpdateGameState);
+    };
+  }, []);
+  
+
+  // Gestion du jeu des cartes
+  useEffect(() => {
+    const handleCardPlayed = ({ playerId, card }) => {
+      const player = playersRef.current.find((p) => p.playerId === playerId);
+      if (player) {
+        setCardsPlayed((prevCards) => [...prevCards, { playerName: player.name, card }]);
+        console.log("cardsPlayed:", cardsPlayed);
+        // Set demandedCouleur only for the first card in the trick
+        if (cardsPlayed.length === 1) {
+          setDemandedCouleur(card.couleur);
+          console.log("demandedCouleur:", demandedCouleur);
+        }
+      }
+    };    
+
+    const handleNextTurn = ({ currentPlayerId }) => {
+      setCurrentPlayerId(currentPlayerId);
+    };
+
+    const handleInvalidMove = ({ message }) => {
+      alert(message);
+    };
+
+    const handleStartRound = ({ currentPlayerId }) => {
+      setCurrentPlayerId(currentPlayerId);
+      setCardsPlayed([]);
+      setAnnouncements([]);
+      setDemandedCouleur(null);
+    };
+
+    const handleTrickWon = ({ winnerPlayerId, winningCard }) => {
+      setPlayers((prevPlayers) =>
+        prevPlayers.map((player) =>
+          player.playerId === winnerPlayerId
+            ? { ...player, wonTricks: (player.wonTricks || 0) + 1 }
+            : player
+        )
+      );
+      setCardsPlayed([]);
+      setDemandedCouleur(null);
+    };
+
+    socket.on('cardPlayed', handleCardPlayed);
+    socket.on('nextTurn', handleNextTurn);
+    socket.on('invalidMove', handleInvalidMove);
+    socket.on('startRound', handleStartRound);
+    socket.on('trickWon', handleTrickWon);
+
+    return () => {
+      socket.off('cardPlayed', handleCardPlayed);
+      socket.off('nextTurn', handleNextTurn);
+      socket.off('invalidMove', handleInvalidMove);
+      socket.off('startRound', handleStartRound);
+      socket.off('trickWon', handleTrickWon);
+    };
+  }, [cardsPlayed, demandedCouleur]);
+
+  // Gestion des annonces
+  useEffect(() => {
+    const handleAnnouncementTurn = ({ playerId }) => {
+      setCurrentAnnouncementPlayerId(playerId);
+      if (playerId === socket.id) {
+        setIsAnnouncementModalOpen(true);
+      }
+    };
+
+    const handleAnnouncementMade = ({ playerId, announcedTricks }) => {
+      setPlayers((prevPlayers) =>
+        prevPlayers.map((player) =>
+          player.playerId === playerId ? { ...player, announcedTricks } : player
+        )
+      );
+      setAnnouncements((prev) => [...prev, { playerId, announcedTricks }]);
+      if (playerId === socket.id) {
+        setIsAnnouncementModalOpen(false);
+      }
+    };
+
+    const handleInvalidAnnouncement = ({ message }) => {
+      alert(message);
+      setIsAnnouncementModalOpen(true);
+    };
+
+    socket.on('announcementTurn', handleAnnouncementTurn);
+    socket.on('announcementMade', handleAnnouncementMade);
+    socket.on('invalidAnnouncement', handleInvalidAnnouncement);
+
+    return () => {
+      socket.off('announcementTurn', handleAnnouncementTurn);
+      socket.off('announcementMade', handleAnnouncementMade);
+      socket.off('invalidAnnouncement', handleInvalidAnnouncement);
+    };
+  }, []);
+
+  const playCard = (card) => {
+    if (currentPlayerId !== socket.id) {
+      alert("Ce n'est pas votre tour de jouer.");
+      return;
+    }
+    socket.emit('playCard', { gameId, card });
+    setHand((prevHand) => prevHand.filter((c) => c.valeur !== card.valeur || c.couleur !== card.couleur));
+  };
+
+  const startGame = () => {
+    socket.emit('startGame', { gameId });
+  };
+
+  const handleAnnounce = (announcedTricks) => {
+    socket.emit('makeAnnouncement', { gameId, announcedTricks });
+  };
+
+  return (
+    <div className="game-room">
+      {/* Manche Details (Top Left) */
+      console.log("gameState:", gameState)}
+      <MancheDetails manche={manche} atout={gameState.atout} />
+
+      {/* Game Details (Top Right) */}
+      <GameDetails gameId={gameId} players={players} />
+
+      {/* ScoreBoard (Bottom Left) */}
+      <div className="scoreboard-container">
+        <ScoreBoard players={players} />
+      </div>
+      {/* Game Area */}
+      {gameState.isStarted ? (
+        <div className="table-container">
+          <Table
+            players={players}
+            hand={hand}
+            onPlayCard={playCard}
+            currentPlayerId={currentPlayerId}
+            localPlayerId={localPlayerId}
+            atout = {gameState.atout.couleur}
+            demandedCouleur={gameState.demandedCouleur}
+          />
+        </div>
+      ) : (
+        <div className="waiting-area">
+          <p>En attente que la partie commence...</p>
+          <button onClick={startGame}>Démarrer la partie</button>
+        </div>
+      )}
+
+      {/* Announcement Modal */}
+      <AnnouncementModal
+        isOpen={isAnnouncementModalOpen}
+        onAnnounce={handleAnnounce}
+        totalPlayers={players.length}
+        manche={manche}
+        announcements={announcements}
+      />
+    </div>
+  );
+}
+
+export default GameRoom;
+
+- Nom du sous dossier: Lobby
+Code du css:
+/* src/components/Lobby/Lobby.css */
+
+.lobby {
+    text-align: center;
+    margin-top: 50px;
+  }
+  
+  .lobby-form {
+    display: inline-block;
+    text-align: left;
+  }
+  
+  .lobby-form input {
+    display: block;
+    margin: 10px 0;
+    padding: 8px;
+    width: 200px;
+  }
+  
+  .lobby-buttons {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .lobby-buttons button {
+    margin: 5px 0;
+    padding: 10px;
+  }
+  
+  .lobby-buttons input {
+    margin: 10px 0;
+  }
+  
+Code du jsx:
+// src/components/Lobby/Lobby.js
+
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { socket } from '../../socket';
+import './Lobby.css';
+
+function Lobby() {
+  const [playerName, setPlayerName] = useState('');
+  const [gameId, setGameId] = useState('');
+  const navigate = useNavigate();
+
+  const handleCreateGame = () => {
+    const localPlayerId = socket.id;
+    // Générer un identifiant de jeu unique (par exemple, avec une chaîne aléatoire)
+    const newGameId = Math.random().toString(36).substring(2, 9);
+    // Rediriger vers la salle de jeu avec le nouvel identifiant
+    navigate(`/game/${newGameId}`, { state: { playerName, localPlayerId }});
+  };
+
+  const handleJoinGame = () => {
+    const localPlayerId = socket.id;
+    // Rediriger vers la salle de jeu avec l'identifiant existant
+    navigate(`/game/${gameId}`, { state: { playerName, localPlayerId }});
+  };
+
+  return (
+    <div className="lobby">
+      <h1>Bienvenue au Jeu des Plis</h1>
+      <div className="lobby-form">
+        <input
+          type="text"
+          placeholder="Votre nom"
+          value={playerName}
+          onChange={(e) => setPlayerName(e.target.value)}
+        />
+        <div className="lobby-buttons">
+          <button onClick={handleCreateGame} disabled={!playerName}>
+            Créer une partie
+          </button>
+          <input
+            type="text"
+            placeholder="ID de la partie"
+            value={gameId}
+            onChange={(e) => setGameId(e.target.value)}
+          />
+          <button onClick={handleJoinGame} disabled={!playerName || !gameId}>
+            Rejoindre une partie
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default Lobby;
+
+
+- Nom du sous dossier: MancheDetails
+Code du css:
+/* src/components/MancheDetails/MancheDetails.css */
+
+.manche-details {
+  position: relative;
+  background: linear-gradient(145deg, #222, #444); /* Fond avec dégradé */
+  padding: 15px; /* Réduction du padding */
+  border-radius: 8px; /* Coins arrondis */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Ombre extérieure */
+  color: #fff;
+  font-family: 'Arial', sans-serif;
+  font-size: 12px; /* Taille de police réduite */
+  width: 120px; /* Largeur ajustée */
+}
+
+.manche-details h3 {
+  font-size: 14px; /* Taille de police réduite */
+  margin-bottom: 8px; /* Espacement réduit */
+  color: #ffc107; /* Couleur accentuée pour les titres */
+}
+
+.manche-details .atout-container {
+  display: flex; /* Alignement horizontal des éléments */
+  align-items: center; /* Alignement vertical centré */
+  gap: 10px; /* Espace entre "Atout :" et l'image */
+  margin-top: 8px; /* Réduction de l'espacement au-dessus */
+  background-color: #333; /* Fond sombre pour le conteneur */
+  padding: 8px; /* Ajout de padding pour l'encadré */
+  border-radius: 6px; /* Coins arrondis */
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3); /* Ombre intérieure */
+}
+
+.card-image {
+  width: 40px; /* Taille réduite pour une présentation compacte */
+  height: auto;
+  border: 1px solid #ccc;
+  border-radius: 4px; /* Coins légèrement arrondis */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Ombre externe pour la carte */
+}
+
+Code du jsx:
+import React from 'react';
+import './MancheDetails.css';
+
+function MancheDetails({ manche, atout }) {
+  return (
+    <div className="manche-details">
+      <h3>Manche : {manche}</h3>
+      {atout && ( // Condition pour afficher la carte seulement si "atout" est défini
+        <div className="atout-container">
+          <h3>Atout :</h3>
+          <img
+            src={`/images/cartes/${atout.valeur}_${atout.couleur}.svg`}
+            alt={`Carte ${atout.valeur} de ${atout.couleur}`}
+            className="card-image"
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default MancheDetails;
+
+
+- Nom du sous dossier: PlayerHand
+Code du css:
+/* src/components/PlayerHand/PlayerHand.css */
+.player-hand {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: nowrap; /* Empêche les cartes de passer à la ligne suivante */
+  gap: var(--player-hand-gap, 50px); /* Utilise la variable pour contrôler l'espacement */
+  transform: scale(var(--player-hand-size, 1)); /* Utilise la variable pour contrôler la taille */
+}
+
+.player-hand .card img {
+  width: 40px; /* Réduction de la largeur par défaut */
+  height: auto;
+}
+
+.current-player .card img {
+  width: 50px; /* Réduction de la taille des cartes pour le joueur actuel */
+}
+
+Code du jsx:
+// PlayerHand.js
+import React, { useEffect, useState } from 'react';
+import Card from '../Card/Card';
+import './PlayerHand.css';
+
+function PlayerHand({ hand, onPlayCard, isCurrentPlayer, isLocalPlayer, atout, demandedCouleur }) {
+  const [playableCards, setPlayableCards] = useState([]);
+  /**
+   * Determines which cards are playable based on the game rules.
+   */
+  useEffect(() => {
+    const determinePlayableCards = () => {
+      if (!isCurrentPlayer || !isLocalPlayer) {
+        return hand.map(() => false); // Not the player's turn
+      }
+
+      // If no color is demanded yet, all cards are playable
+      if (!demandedCouleur) {
+        return hand.map(() => true);
+      }
+
+      // Check if the player has any cards matching the demanded color
+      const hasDemandedCouleur = hand.some((card) => card.couleur === demandedCouleur);
+
+      return hand.map((card) => {
+        if (hasDemandedCouleur) {
+          return card.couleur === demandedCouleur;  // Must follow color
+        }
+
+        const hasAtout = hand.some((c) => c.couleur === atout);
+        if (hasAtout) {
+          return card.couleur === atout;  // Must play trump if no demanded color
+        }
+
+        return true;  // Otherwise, any card is allowed
+      });
+
+    };
+
+    setPlayableCards(determinePlayableCards());
+  }, [hand, isCurrentPlayer, isLocalPlayer, atout, demandedCouleur]);
+
+  return (
+    <div className={`player-hand ${isLocalPlayer ? 'current-player' : 'other-player'}`}>
+      {hand.map((card, index) => {
+        const displayedCard = isLocalPlayer ? card : { valeur: 'verso', couleur: 'carte' };
+        const isPlayable = isCurrentPlayer && playableCards[index];
+        const isGrayed = isCurrentPlayer && !playableCards[index];
+
+        return (
+          <Card
+            key={index}
+            card={displayedCard}
+            isPlayable={isPlayable}
+            isGrayed={isGrayed}
+            onClick={isPlayable ? onPlayCard : null}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+export default PlayerHand;
+
+
+- Nom du sous dossier: ScoreBoard
+Code du css:
+.score-board {
+  position: fixed; /* Fixé en bas à gauche */
+  bottom: 20px; /* Distance du bas */
+  left: 20px; /* Distance de la gauche */
+  background-color: #1e1e2f; /* Couleur de fond */
+  color: #f0f0f0; /* Couleur du texte */
+  padding: 15px; /* Espacement interne */
+  border-radius: 8px; /* Coins arrondis */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Ombre */
+  width: 300px; /* Largeur fixe */
+  font-size: 0.9em; /* Taille du texte réduite */
+  z-index: 1000; /* Priorité d'affichage */
+}
+
+.score-board h3 {
+  margin-bottom: 10px;
+  color: #f8d12f; /* Couleur d'accentuation pour le titre */
+  text-align: center;
+  font-size: 1.1em;
+}
+
+.score-board table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.score-board th,
+.score-board td {
+  text-align: left;
+  padding: 5px 8px;
+  font-size: 0.9em;
+}
+
+.score-board th {
+  background-color: #282b4f; /* Fond sombre */
+  color: #f0f0f0; /* Texte clair */
+  text-align: center;
+}
+
+.score-board tr:nth-child(even) {
+  background-color: #2a2a3b; /* Fond alterné */
+}
+
+.score-board tr:hover {
+  background-color: #3c3c56; /* Survol */
+}
+
+.score-board td {
+  border-bottom: 1px solid #444; /* Séparation discrète */
+}
+
+Code du jsx:
+// src/components/ScoreBoard/ScoreBoard.js
+
+import React from 'react';
+import './ScoreBoard.css';
+
+function ScoreBoard({ players }) {
+  return (
+    <div className="score-board">
+      <h3>Tableau des Scores</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Joueur</th>
+            <th>Score</th>
+            <th>Annonces</th>
+            <th>Plis Gagnés</th>
+          </tr>
+        </thead>
+        <tbody>
+          {players.map((player) => (
+            <tr key={player.playerId}>
+              <td>{player.name}</td>
+              <td>{player.score}</td>
+              <td>{player.announcedTricks}</td>
+              <td>{player.wonTricks}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export default ScoreBoard;
+
+
+- Nom du sous dossier: Table
+Code du css:
+/* src/components/Table/Table.css */
+
+/* Conteneur principal */
+.table {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background-color: green;
+  overflow: hidden;
+}
+
+/* Conteneur de la main du joueur */
+.player-hand-container {
+  position: absolute;
+  width: 150px; /* Ajustez en fonction de la taille des cartes */
+  text-align: center;
+}
+/* Aligner les cartes sur une seule ligne */
+.player-hand-container .player-hand {
+  display: flex; /* Définit un conteneur flex pour aligner les cartes en ligne */
+  justify-content: center; /* Centre les cartes horizontalement */
+  align-items: center; /* Aligne verticalement si nécessaire */
+  gap: 10px; /* Espacement entre les cartes */
+}
+
+
+.current-player {
+  z-index: 10; /* Assurez-vous que la main du joueur est au-dessus */
+}
+
+/* Style pour le nom du joueur */
+.player-name {
+  font-size: 1rem;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0px 0px 3px black;
+  margin-bottom: 20px; /* Espace au-dessus des cartes */
+}
+
+Code du jsx:
+// Table.js
+import React from 'react';
+import './Table.css';
+import PlayerHand from '../PlayerHand/PlayerHand';
+
+function Table({ players, hand, currentPlayerId, localPlayerId, onPlayCard, atout, demandedCouleur }) {
+  // Reorder players so the local player is always at index 0.
+  const orderedPlayers = reorderPlayers(players, localPlayerId);
+
+  return (
+    <div className="table">
+      {orderedPlayers.map((player, index) => {
+        const isCurrentPlayer = player.playerId === currentPlayerId;
+        const isLocalPlayer = player.playerId === localPlayerId;
+        const positionStyles = getPlayerPositionStyle(index, orderedPlayers.length);
+
+        // Local player sees their hand; others see card backs.
+        const playerHand = isLocalPlayer ? hand : [];
+
+        return (
+          <div
+            key={player.playerId}
+            className={`player-hand-container ${isCurrentPlayer ? 'current-player' : ''}`}
+            style={positionStyles}
+          >
+            <div className="player-name">
+              {player.name}
+            </div>
+
+            <PlayerHand
+              hand={playerHand}
+              onPlayCard={isCurrentPlayer && isLocalPlayer ? onPlayCard : null}
+              isCurrentPlayer={isCurrentPlayer && isLocalPlayer}
+              isLocalPlayer={isLocalPlayer}
+              atout={atout}
+              demandedCouleur={demandedCouleur}
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * Reorder players to always have the local player at index 0.
+ */
+function reorderPlayers(players, localPlayerId) {
+  const localIndex = players.findIndex((p) => p.playerId === localPlayerId);
+  if (localIndex === -1) return players;
+
+  return [
+    ...players.slice(localIndex),
+    ...players.slice(0, localIndex)
+  ];
+}
+
+/**
+ * Position players around the table based on the number of players.
+ */
+
+/**
+ * Retourne un style de positionnement pour un joueur donné en fonction de son index (après réorg)
+ * et du nombre total de joueurs.
+ * 
+ * Index 0 : bas, centré, pas de rotation
+ * Pour 2 joueurs:
+ *   - Index 1 : haut, rotation 180°
+ * Pour 3 joueurs:
+ *   - Index 1 : gauche, rotation 90°
+ *   - Index 2 : droite, rotation -90°
+ * Pour 4 joueurs:
+ *   - Index 1 : gauche, rotation 90°
+ *   - Index 2 : haut, rotation -90°
+ *   - Index 3 : droite, rotation -90°
+ */
+
+function getPlayerPositionStyle(index, numPlayers) {
+  const baseStyle = {
+    position: 'absolute',
+    transformOrigin: 'center center',
+  };
+
+  if (numPlayers === 2) {
+    if (index === 0) {
+      return { ...baseStyle, bottom: '5%', left: '50%', transform: 'translateX(-50%)' };
+    } else {
+      return { ...baseStyle, top: '5%', left: '50%', transform: 'translateX(-50%) rotate(180deg)' };
+    }
+  }
+
+  if (numPlayers === 3) {
+    if (index === 0) {
+      return { ...baseStyle, bottom: '5%', left: '50%', transform: 'translateX(-50%)' };
+    } else if (index === 1) {
+      return { ...baseStyle, left: '5%', top: '50%', transform: 'translateY(-50%) rotate(90deg)' };
+    } else {
+      return { ...baseStyle, right: '5%', top: '50%', transform: 'translateY(-50%) rotate(-90deg)' };
+    }
+  }
+
+  if (numPlayers === 4) {
+    if (index === 0) {
+      return { ...baseStyle, bottom: '5%', left: '50%', transform: 'translateX(-50%)' };
+    } else if (index === 1) {
+      return { ...baseStyle, left: '5%', top: '50%', transform: 'translateY(-50%) rotate(90deg)' };
+    } else if (index === 2) {
+      return { ...baseStyle, top: '5%', left: '50%', transform: 'translateX(-50%) rotate(-90deg)' };
+    } else {
+      return { ...baseStyle, right: '5%', top: '50%', transform: 'translateY(-50%) rotate(-90deg)' };
+    }
+  }
+
+  // Default position for any other number of players
+  if (index === 0) {
+    return { ...baseStyle, bottom: '5%', left: '50%', transform: 'translateX(-50%)' };
+  } else {
+    return { ...baseStyle, top: '50%', left: `${5 + (index * 10)}%`, transform: 'translateY(-50%)' };
+  }
+}
+
+export default Table;
