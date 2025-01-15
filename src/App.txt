@@ -1,0 +1,96 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Lobby from './components/Lobby/Lobby';
+import GameRoom from './components/GameRoom/GameRoom';
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Lobby />} />
+        <Route path="/game/:gameId" element={<GameRoom />} />
+      </Routes>
+    </Router>
+  );
+}
+
+export default App;
+
+
+import React, { useState } from 'react';
+import Table from './components/Table/Table';
+
+function App() {
+  const [players] = useState([
+    { playerId: '1', name: 'Player 1' },
+    { playerId: '2', name: 'Player 2' },
+    { playerId: '3', name: 'Player 3' },
+  ]);
+
+  const [currentPlayerId] = useState('1');
+  const [hands] = useState({
+    1: [
+      { valeur: 'As', couleur: 'Coeur' },
+      { valeur: '10', couleur: 'Pique' },
+      { valeur: 'Roi', couleur: 'Carreau' },
+      { valeur: '8', couleur: 'Trèfle' },
+      { valeur: 'Dame', couleur: 'Coeur' },
+    ],
+    2: Array(5).fill({ valeur: 'verso', couleur: 'carte' }),
+    3: Array(5).fill({ valeur: 'verso', couleur: 'carte' }),
+  });
+
+  const playCard = (card) => {
+    console.log('Carte jouée :', card);
+  };
+
+  return (
+    <div>
+      <Table players={players} hands={hands} currentPlayerId={currentPlayerId} onPlayCard={playCard} />
+    </div>
+  );
+}
+
+export default App;
+
+/* App.css */
+
+/* Conteneur principal pour le jeu */
+.game-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* Styles communs pour toutes les mains */
+.player-hand {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Main du joueur courant (en bas) */
+.current-player {
+  bottom: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Main du joueur à gauche (inclinée à 90°) */
+.left-player {
+  top: 50%;
+  left: 10%;
+  transform: translateY(-50%) rotate(90deg);
+}
+
+/* Main du joueur à droite (inclinée à -90°) */
+.right-player {
+  top: 50%;
+  right: 10%;
+  transform: translateY(-50%) rotate(-90deg);
+}
