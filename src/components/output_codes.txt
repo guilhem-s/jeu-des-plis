@@ -404,8 +404,6 @@ Code du css:
 }
 
 Code du jsx:
-// src/components/GameRoom/GameRoom.js
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { socket } from '../../socket';
@@ -426,12 +424,9 @@ function GameRoom() {
   const [manche, setManche] = useState(1);
   const [hand, setHand] = useState([]);
   const [cardsPlayed, setCardsPlayed] = useState([]);
-  const [demandedCouleur, setDemandedCouleur] = useState(null);
-
 
   const [isAnnouncementModalOpen, setIsAnnouncementModalOpen] = useState(false);
   const [announcements, setAnnouncements] = useState([]);
-  const [currentAnnouncementPlayerId, setCurrentAnnouncementPlayerId] = useState(null);
   const [currentPlayerId, setCurrentPlayerId] = useState(null);
 
   const playersRef = useRef(players);
@@ -440,64 +435,45 @@ function GameRoom() {
     playersRef.current = players;
   }, [players]);
 
-  // Rejoindre la partie et écouter les événements socket
+  // --- Handle Socket Events on Component Mount ---
   useEffect(() => {
     if (!gameId || !playerName) {
       console.error('Game ID or player name is missing.');
       return;
     }
 
-    // Joindre la partie une seule fois lors du montage
+    // Join the game once on component mount
     socket.emit('joinGame', { gameId, playerName });
 
-    // Gestionnaires d'événements
+    // Event Handlers
     const handleUpdatePlayers = (playersList) => setPlayers(playersList);
     const handleDealCards = (cards) => setHand(cards);
+    const handleUpdateGameState = (state) => setGameState((prevState) => ({ ...prevState, ...state }));
     const handleUpdateManche = ({ manche }) => setManche(manche);
 
-    // Inscription des écouteurs d'événements
+    // Register event listeners
     socket.on('updatePlayers', handleUpdatePlayers);
     socket.on('dealCards', handleDealCards);
+    socket.on('updateGameState', handleUpdateGameState);
     socket.on('updateManche', handleUpdateManche);
 
-    // Nettoyage lors du démontage
+    // Cleanup listeners on unmount
     return () => {
       socket.off('updatePlayers', handleUpdatePlayers);
       socket.off('dealCards', handleDealCards);
+      socket.off('updateGameState', handleUpdateGameState);
       socket.off('updateManche', handleUpdateManche);
     };
   }, [gameId, playerName]);
 
-  useEffect(() => {
-    const handleUpdateGameState = (state) => {
-      setGameState((prevState) => ({
-        ...prevState,
-        ...state,
-      }));
-    };
-  
-    socket.on('updateGameState', handleUpdateGameState);
-  
-    return () => {
-      socket.off('updateGameState', handleUpdateGameState);
-    };
-  }, []);
-  
-
-  // Gestion du jeu des cartes
+  // --- Handle Card Play and Trick Management ---
   useEffect(() => {
     const handleCardPlayed = ({ playerId, card }) => {
       const player = playersRef.current.find((p) => p.playerId === playerId);
       if (player) {
-        setCardsPlayed((prevCards) => [...prevCards, { playerName: player.name, card }]);
-        console.log("cardsPlayed:", cardsPlayed);
-        // Set demandedCouleur only for the first card in the trick
-        if (cardsPlayed.length === 1) {
-          setDemandedCouleur(card.couleur);
-          console.log("demandedCouleur:", demandedCouleur);
-        }
+        setCardsPlayed((prevCards) => [...prevCards, { playerId, card }]);
       }
-    };    
+    };
 
     const handleNextTurn = ({ currentPlayerId }) => {
       setCurrentPlayerId(currentPlayerId);
@@ -511,27 +487,23 @@ function GameRoom() {
       setCurrentPlayerId(currentPlayerId);
       setCardsPlayed([]);
       setAnnouncements([]);
-      setDemandedCouleur(null);
     };
 
     const handleTrickWon = ({ winnerPlayerId, winningCard }) => {
-      setPlayers((prevPlayers) =>
-        prevPlayers.map((player) =>
-          player.playerId === winnerPlayerId
-            ? { ...player, wonTricks: (player.wonTricks || 0) + 1 }
-            : player
-        )
-      );
-      setCardsPlayed([]);
-      setDemandedCouleur(null);
+      console.log(`Player ${winnerPlayerId} won the trick with`, winningCard);
+
+      // Delay clearing the played cards for 2 seconds to display the last card
+      setTimeout(() => { setCardsPlayed([]); }, 2000); // 🧹 Clear the played cards after the delay
     };
 
+    // Register event listeners
     socket.on('cardPlayed', handleCardPlayed);
     socket.on('nextTurn', handleNextTurn);
     socket.on('invalidMove', handleInvalidMove);
     socket.on('startRound', handleStartRound);
     socket.on('trickWon', handleTrickWon);
 
+    // Cleanup listeners on unmount
     return () => {
       socket.off('cardPlayed', handleCardPlayed);
       socket.off('nextTurn', handleNextTurn);
@@ -539,15 +511,12 @@ function GameRoom() {
       socket.off('startRound', handleStartRound);
       socket.off('trickWon', handleTrickWon);
     };
-  }, [cardsPlayed, demandedCouleur]);
+  }, []);
 
-  // Gestion des annonces
+  // --- Handle Announcements Phase ---
   useEffect(() => {
     const handleAnnouncementTurn = ({ playerId }) => {
-      setCurrentAnnouncementPlayerId(playerId);
-      if (playerId === socket.id) {
-        setIsAnnouncementModalOpen(true);
-      }
+      if (playerId === socket.id) { setIsAnnouncementModalOpen(true); }
     };
 
     const handleAnnouncementMade = ({ playerId, announcedTricks }) => {
@@ -557,9 +526,7 @@ function GameRoom() {
         )
       );
       setAnnouncements((prev) => [...prev, { playerId, announcedTricks }]);
-      if (playerId === socket.id) {
-        setIsAnnouncementModalOpen(false);
-      }
+      if (playerId === socket.id) { setIsAnnouncementModalOpen(false); }
     };
 
     const handleInvalidAnnouncement = ({ message }) => {
@@ -578,6 +545,7 @@ function GameRoom() {
     };
   }, []);
 
+  // --- Player Actions ---
   const playCard = (card) => {
     if (currentPlayerId !== socket.id) {
       alert("Ce n'est pas votre tour de jouer.");
@@ -595,10 +563,10 @@ function GameRoom() {
     socket.emit('makeAnnouncement', { gameId, announcedTricks });
   };
 
+  // --- Render Game Components ---
   return (
     <div className="game-room">
-      {/* Manche Details (Top Left) */
-      console.log("gameState:", gameState)}
+      {/* Manche Details (Top Left) */}
       <MancheDetails manche={manche} atout={gameState.atout} />
 
       {/* Game Details (Top Right) */}
@@ -608,16 +576,18 @@ function GameRoom() {
       <div className="scoreboard-container">
         <ScoreBoard players={players} />
       </div>
+
       {/* Game Area */}
       {gameState.isStarted ? (
         <div className="table-container">
           <Table
             players={players}
+            cardsPlayed={cardsPlayed}
             hand={hand}
             onPlayCard={playCard}
             currentPlayerId={currentPlayerId}
             localPlayerId={localPlayerId}
-            atout = {gameState.atout.couleur}
+            atout={gameState.atout?.couleur}
             demandedCouleur={gameState.demandedCouleur}
           />
         </div>
@@ -641,6 +611,7 @@ function GameRoom() {
 }
 
 export default GameRoom;
+
 
 - Nom du sous dossier: Lobby
 Code du css:
@@ -1021,15 +992,49 @@ Code du css:
   margin-bottom: 20px; /* Espace au-dessus des cartes */
 }
 
+/* Box in front of each player to display the last played card */
+.played-card-box {
+  width: 60px;
+  height: 90px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.1); /* Transparent background */
+  border: 2px dashed rgba(255, 255, 255, 0.3); /* Light dashed border */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+/* Placeholder when no card is played yet */
+.empty-card-box {
+  font-size: 2rem;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+}
+
+/* Ensure the card fits perfectly in the box */
+.played-card-box img {
+  width: 100%;
+  height: auto;
+  border-radius: 5px;
+}
 Code du jsx:
 // Table.js
 import React from 'react';
 import './Table.css';
+import Card from '../Card/Card'
 import PlayerHand from '../PlayerHand/PlayerHand';
 
-function Table({ players, hand, currentPlayerId, localPlayerId, onPlayCard, atout, demandedCouleur }) {
+function Table({ players, cardsPlayed, hand, currentPlayerId, localPlayerId, onPlayCard, atout, demandedCouleur }) {
   // Reorder players so the local player is always at index 0.
   const orderedPlayers = reorderPlayers(players, localPlayerId);
+
+  // Helper function to get the last card played by a player
+  const getLastPlayedCard = (playerId) => {
+    const playerCard = cardsPlayed.find((entry) => entry.playerId === playerId);
+    return playerCard ? playerCard.card : null;
+  };
 
   return (
     <div className="table">
@@ -1037,9 +1042,9 @@ function Table({ players, hand, currentPlayerId, localPlayerId, onPlayCard, atou
         const isCurrentPlayer = player.playerId === currentPlayerId;
         const isLocalPlayer = player.playerId === localPlayerId;
         const positionStyles = getPlayerPositionStyle(index, orderedPlayers.length);
-
-        // Local player sees their hand; others see card backs.
         const playerHand = isLocalPlayer ? hand : [];
+
+        const lastPlayedCard = getLastPlayedCard(player.playerId);
 
         return (
           <div
@@ -1047,9 +1052,16 @@ function Table({ players, hand, currentPlayerId, localPlayerId, onPlayCard, atou
             className={`player-hand-container ${isCurrentPlayer ? 'current-player' : ''}`}
             style={positionStyles}
           >
-            <div className="player-name">
-              {player.name}
+            {/* Box to display the played card */}
+            <div className="played-card-box">
+              {lastPlayedCard ? (
+                <Card card={lastPlayedCard} isPlayable={false} isGrayed={false} />
+              ) : (
+                <div className="empty-card-box">🂠</div> // Placeholder for no card
+              )}
             </div>
+
+            <div className="player-name">{player.name}</div>
 
             <PlayerHand
               hand={playerHand}
@@ -1129,7 +1141,7 @@ function getPlayerPositionStyle(index, numPlayers) {
     } else if (index === 1) {
       return { ...baseStyle, left: '5%', top: '50%', transform: 'translateY(-50%) rotate(90deg)' };
     } else if (index === 2) {
-      return { ...baseStyle, top: '5%', left: '50%', transform: 'translateX(-50%) rotate(-90deg)' };
+      return { ...baseStyle, top: '5%', left: '50%', transform: 'translateX(-50%) rotate(-1800deg)' };
     } else {
       return { ...baseStyle, right: '5%', top: '50%', transform: 'translateY(-50%) rotate(-90deg)' };
     }
@@ -1144,3 +1156,4 @@ function getPlayerPositionStyle(index, numPlayers) {
 }
 
 export default Table;
+

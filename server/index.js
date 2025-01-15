@@ -74,20 +74,38 @@ function calculateScores(gameId) {
   const game = games[gameId];
   if (!game) return;
 
+  console.log(`📊 Résultats de la manche ${game.manche}:`);
+
   game.players.forEach((player) => {
     const diff = Math.abs(player.announcedTricks - player.wonTricks);
+    let pointsEarned = 0;
+
     if (diff === 0 && player.wonTricks === 0) {
-      player.score += 1;      
+      // Le joueur a annoncé 0 et n'a gagné aucun pli → +1 point
+      pointsEarned = 1;
+      player.score += pointsEarned;
+      console.log(`➡️ ${player.name} a parié 0 et a gagné 0 pli(s) → +${pointsEarned} point (Total: ${player.score})`);
     } else if (diff === 0) {
-      player.score += 2 * player.wonTricks; // Le joueur a réalisé son contrat
+      // Le joueur a réussi son contrat → +2 points par pli
+      pointsEarned = 2 * player.wonTricks;
+      player.score += pointsEarned;
+      console.log(`➡️ ${player.name} a parié ${player.announcedTricks} pli(s) et en a gagné ${player.wonTricks} → +${pointsEarned} points (Total: ${player.score})`);
     } else {
-      player.score -= diff; // Le joueur n'a pas réalisé son contrat
+      // Le joueur a raté son contrat → -1 point par différence
+      pointsEarned = -diff;
+      player.score += pointsEarned;
+      console.log(`❌ ${player.name} a parié ${player.announcedTricks} pli(s) mais en a gagné ${player.wonTricks} → ${pointsEarned} point(s) (Total: ${player.score})`);
     }
 
-    player.announcedTricks = 0; player.wonTricks = 0; // Réinitialiser les valeurs pour la prochaine manche
+    // Réinitialiser les valeurs pour la prochaine manche
+    player.announcedTricks = 0;
+    player.wonTricks = 0;
   });
 
-  io.to(gameId).emit('updatePlayers', game.players); // Mettre à jour les scores pour tous les joueurs
+  console.log('-----------------------------------------');
+
+  // Mettre à jour les scores pour tous les joueurs
+  io.to(gameId).emit('updatePlayers', game.players);
 }
 
 function rotatePlayers(gameId) {
@@ -166,7 +184,7 @@ function determineTrickWinner(gameId) {
   let winnerPlayerId = cards[0].playerId;
 
   cards.forEach(({ playerId, card }) => {
-    if (card.couleur === game.atout && winningCard.couleur !== game.atout) {
+    if (card.couleur === game.atout.couleur && winningCard.couleur !== game.atout.couleur) {
       winningCard = card;
       winnerPlayerId = playerId;
     } else if (card.couleur === winningCard.couleur) {
@@ -177,54 +195,58 @@ function determineTrickWinner(gameId) {
     }    
   });
 
+  // 📝 Console Log for Debugging
+  console.log(`🔍 Résultat du pli avec atout: ${game.atout.couleur} et couleur demandée : ${game.demandedCouleur}`);
+  cards.forEach(({ playerId, card }) => {
+    const player = game.players.find((p) => p.playerId === playerId);
+    console.log(`➡️ ${player.name} a joué ${card.valeur} de ${card.couleur}`);
+  });
+
   const winner = game.players.find((p) => p.playerId === winnerPlayerId);
-  if (winner) {
-    winner.wonTricks += 1;
-    console.log('winner is', winner.name)
-  }
+  console.log(`🏆 ${winner.name} a gagné le pli avec ${winningCard.valeur} de ${winningCard.couleur}`);
+  console.log('-----------------------------------------');
 
-  setTimeout(() => { // ✅ Attente de 5 secondes avant de passer au prochain pli
-    io.to(gameId).emit('trickWon', { winnerPlayerId, winningCard }); // Notify clients about the trick winner
-    
-    setTimeout(() => { io.to(gameId).emit('clearPlayedCards'); }, 2000); // 🧹 Notify clients to clear the played cards after 2 seconds
+  if (winner) { winner.wonTricks += 1; }
 
-    io.to(gameId).emit('updatePlayers', game.players); // 🚀 Notify clients with the updated player states
+  setTimeout(() => { io.to(gameId).emit('clearPlayedCards'); }, 3000); // 🧹 Notify clients to clear the played cards after 2 seconds
+  io.to(gameId).emit('trickWon', { winnerPlayerId, winningCard }); // Notify clients about the trick winner
 
-    game.cardsOnTable = [];  // Réinitialiser les cartes sur la table
-    game.currentTurn = winnerPlayerId;  // Le gagnant commence le prochain pli
+  io.to(gameId).emit('updatePlayers', game.players); // 🚀 Notify clients with the updated player states
 
-    const allHandsEmpty = game.players.every((p) => p.hand.length === 0); // Vérifier si tous les plis sont joués
+  game.cardsOnTable = [];  // Réinitialiser les cartes sur la table
+  game.currentTurn = winnerPlayerId;  // Le gagnant commence le prochain pli
 
-    if (allHandsEmpty) {
-      // ✅ Si la manche est terminée, calculer les scores
-      calculateScores(gameId);
+  const allHandsEmpty = game.players.every((p) => p.hand.length === 0); // Vérifier si tous les plis sont joués
 
-      // ✅ Mise à jour de la manche
-      if (game.increasing) {
-        if (game.manche < 7) {
-          game.manche += 1;
-        } else {
-          game.increasing = false;
-        }
+  if (allHandsEmpty) {
+    // ✅ Si la manche est terminée, calculer les scores
+    calculateScores(gameId);
+
+    // ✅ Mise à jour de la manche
+    if (game.increasing) {
+      if (game.manche < 7) {
+        game.manche += 1;
       } else {
-        game.manche -= 1;
+        game.increasing = false;
       }
-
-      rotatePlayers(gameId);
-      io.to(gameId).emit('updateManche', { manche: game.manche });
-
-      // ✅ Démarrer la nouvelle manche ou finir le jeu
-      if (game.manche > 0) {
-        startNewHand(gameId);
-      } else {
-        endGame(gameId);
-      }
-
     } else {
-      // ✅ Sinon, commencer le prochain pli
-      io.to(gameId).emit('nextTurn', { currentPlayerId: game.currentTurn });
+      game.manche -= 1;
     }
-  }, 5000);  // ✅ Pause de 5 secondes (5000 ms)
+
+    rotatePlayers(gameId);
+    io.to(gameId).emit('updateManche', { manche: game.manche });
+
+    // ✅ Démarrer la nouvelle manche ou finir le jeu
+    if (game.manche > 0) {
+      startNewHand(gameId);
+    } else {
+      endGame(gameId);
+    }
+
+  } else {
+    // ✅ Sinon, commencer le prochain pli
+    io.to(gameId).emit('nextTurn', { currentPlayerId: game.currentTurn });
+  }
 }
 
 io.on('connection', (socket) => {
@@ -382,8 +404,8 @@ io.on('connection', (socket) => {
       socket.emit('invalidMove', { message: "Vous devez fournir la couleur demandée." });
       return;
     } else if (!hasDemandedCouleur) {
-      const hasAtout = player.hand.some((c) => c.couleur === game.atout);
-      if (hasAtout && card.couleur !== game.atout) {
+      const hasAtout = player.hand.some((c) => c.couleur === game.atout.couleur);
+      if (hasAtout && card.couleur !== game.atout.couleur) {
         socket.emit('invalidMove', { message: "Vous devez couper avec un atout si vous n'avez pas la couleur demandée." });
         return;
       }

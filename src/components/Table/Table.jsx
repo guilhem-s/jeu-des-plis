@@ -1,18 +1,22 @@
 // Table.js
 import React from 'react';
 import './Table.css';
-import Card from '../Card/Card'
+import Card from '../Card/Card';
 import PlayerHand from '../PlayerHand/PlayerHand';
 
-function Table({ players, cardsPlayed, hand, currentPlayerId, localPlayerId, onPlayCard, atout, demandedCouleur }) {
-  // Reorder players so the local player is always at index 0.
+function Table({ players, cardsPlayed, hand, currentPlayerId, localPlayerId, onPlayCard, atout, demandedCouleur, manche }) {
   const orderedPlayers = reorderPlayers(players, localPlayerId);
 
-  // Helper function to get the last card played by a player
+  // Dernière carte jouée
   const getLastPlayedCard = (playerId) => {
     const playerCard = cardsPlayed.find((entry) => entry.playerId === playerId);
     return playerCard ? playerCard.card : null;
   };
+
+  const getRemainingCards = (playerId, manche) => {
+        const cardsPlayedByPlayer = cardsPlayed.filter(card => card.playerId === playerId).length;
+        return Math.max(0, manche - cardsPlayedByPlayer);  // Le nombre total de cartes - cartes jouées
+      };
 
   return (
     <div className="table">
@@ -20,7 +24,16 @@ function Table({ players, cardsPlayed, hand, currentPlayerId, localPlayerId, onP
         const isCurrentPlayer = player.playerId === currentPlayerId;
         const isLocalPlayer = player.playerId === localPlayerId;
         const positionStyles = getPlayerPositionStyle(index, orderedPlayers.length);
-        const playerHand = isLocalPlayer ? hand : [];
+
+        // ✅ Utilise la valeur de manche pour déterminer les cartes restantes
+        const remainingCards = getRemainingCards(player.playerId, manche);
+
+        // ✅ Main affichée : vraies cartes pour le joueur local, dos de cartes pour les autres
+        const playerHand = isLocalPlayer
+          ? hand
+          : Array.from({ length: remainingCards }, () => ({ valeur: 'verso', couleur: 'carte' }));
+
+        console.log(`Hand for ${player.name}:`, playerHand);  // ✅ Vérification dans la console
 
         const lastPlayedCard = getLastPlayedCard(player.playerId);
 
@@ -30,17 +43,18 @@ function Table({ players, cardsPlayed, hand, currentPlayerId, localPlayerId, onP
             className={`player-hand-container ${isCurrentPlayer ? 'current-player' : ''}`}
             style={positionStyles}
           >
-            {/* Box to display the played card */}
+            {/* Carte jouée */}
             <div className="played-card-box">
               {lastPlayedCard ? (
                 <Card card={lastPlayedCard} isPlayable={false} isGrayed={false} />
               ) : (
-                <div className="empty-card-box">🂠</div> // Placeholder for no card
+                <div className="empty-card-box">🂠</div>
               )}
             </div>
 
             <div className="player-name">{player.name}</div>
 
+            {/* ✅ Passage correct de la main */}
             <PlayerHand
               hand={playerHand}
               onPlayCard={isCurrentPlayer && isLocalPlayer ? onPlayCard : null}
@@ -52,26 +66,21 @@ function Table({ players, cardsPlayed, hand, currentPlayerId, localPlayerId, onP
           </div>
         );
       })}
+
     </div>
   );
 }
 
-/**
- * Reorder players to always have the local player at index 0.
- */
+// Réorganise les joueurs
 function reorderPlayers(players, localPlayerId) {
   const localIndex = players.findIndex((p) => p.playerId === localPlayerId);
   if (localIndex === -1) return players;
 
   return [
     ...players.slice(localIndex),
-    ...players.slice(0, localIndex)
+    ...players.slice(0, localIndex),
   ];
 }
-
-/**
- * Position players around the table based on the number of players.
- */
 
 /**
  * Retourne un style de positionnement pour un joueur donné en fonction de son index (après réorg)
@@ -89,6 +98,7 @@ function reorderPlayers(players, localPlayerId) {
  *   - Index 3 : droite, rotation -90°
  */
 
+// Position des joueurs autour de la table
 function getPlayerPositionStyle(index, numPlayers) {
   const baseStyle = {
     position: 'absolute',
@@ -96,41 +106,23 @@ function getPlayerPositionStyle(index, numPlayers) {
   };
 
   if (numPlayers === 2) {
-    if (index === 0) {
-      return { ...baseStyle, bottom: '5%', left: '50%', transform: 'translateX(-50%)' };
-    } else {
-      return { ...baseStyle, top: '5%', left: '50%', transform: 'translateX(-50%) rotate(180deg)' };
-    }
+    return index === 0
+      ? { ...baseStyle, bottom: '5%', left: '50%', transform: 'translateX(-50%)' }
+      : { ...baseStyle, top: '5%', left: '50%', transform: 'translateX(-50%) rotate(180deg)' };
   }
 
   if (numPlayers === 3) {
-    if (index === 0) {
-      return { ...baseStyle, bottom: '5%', left: '50%', transform: 'translateX(-50%)' };
-    } else if (index === 1) {
-      return { ...baseStyle, left: '5%', top: '50%', transform: 'translateY(-50%) rotate(90deg)' };
-    } else {
-      return { ...baseStyle, right: '5%', top: '50%', transform: 'translateY(-50%) rotate(-90deg)' };
-    }
+    if (index === 1) return { ...baseStyle, left: '5%', top: '50%', transform: 'translateY(-50%) rotate(90deg)' };
+    if (index === 2) return { ...baseStyle, right: '5%', top: '50%', transform: 'translateY(-50%) rotate(-90deg)' };
   }
 
   if (numPlayers === 4) {
-    if (index === 0) {
-      return { ...baseStyle, bottom: '5%', left: '50%', transform: 'translateX(-50%)' };
-    } else if (index === 1) {
-      return { ...baseStyle, left: '5%', top: '50%', transform: 'translateY(-50%) rotate(90deg)' };
-    } else if (index === 2) {
-      return { ...baseStyle, top: '5%', left: '50%', transform: 'translateX(-50%) rotate(-1800deg)' };
-    } else {
-      return { ...baseStyle, right: '5%', top: '50%', transform: 'translateY(-50%) rotate(-90deg)' };
-    }
+    if (index === 1) return { ...baseStyle, left: '5%', top: '50%', transform: 'translateY(-50%) rotate(90deg)' };
+    if (index === 2) return { ...baseStyle, top: '5%', left: '50%', transform: 'translateX(-50%) rotate(180deg)' };
+    if (index === 3) return { ...baseStyle, right: '5%', top: '50%', transform: 'translateY(-50%) rotate(-90deg)' };
   }
 
-  // Default position for any other number of players
-  if (index === 0) {
-    return { ...baseStyle, bottom: '5%', left: '50%', transform: 'translateX(-50%)' };
-  } else {
-    return { ...baseStyle, top: '50%', left: `${5 + (index * 10)}%`, transform: 'translateY(-50%)' };
-  }
+  return { ...baseStyle, bottom: '5%', left: '50%', transform: 'translateX(-50%)' };
 }
 
 export default Table;

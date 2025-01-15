@@ -87,9 +87,7 @@ function GameRoom() {
       console.log(`Player ${winnerPlayerId} won the trick with`, winningCard);
 
       // Delay clearing the played cards for 2 seconds to display the last card
-      setTimeout(() => {
-        setCardsPlayed([]);  // 🧹 Clear the played cards after the delay
-      }, 2000);
+      setTimeout(() => { setCardsPlayed([]); }, 2000); // 🧹 Clear the played cards after the delay
     };
 
     // Register event listeners
@@ -112,9 +110,7 @@ function GameRoom() {
   // --- Handle Announcements Phase ---
   useEffect(() => {
     const handleAnnouncementTurn = ({ playerId }) => {
-      if (playerId === socket.id) {
-        setIsAnnouncementModalOpen(true);
-      }
+      if (playerId === socket.id) { setIsAnnouncementModalOpen(true); }
     };
 
     const handleAnnouncementMade = ({ playerId, announcedTricks }) => {
@@ -124,9 +120,7 @@ function GameRoom() {
         )
       );
       setAnnouncements((prev) => [...prev, { playerId, announcedTricks }]);
-      if (playerId === socket.id) {
-        setIsAnnouncementModalOpen(false);
-      }
+      if (playerId === socket.id) { setIsAnnouncementModalOpen(false); }
     };
 
     const handleInvalidAnnouncement = ({ message }) => {
@@ -189,6 +183,7 @@ function GameRoom() {
             localPlayerId={localPlayerId}
             atout={gameState.atout?.couleur}
             demandedCouleur={gameState.demandedCouleur}
+            manche={manche}
           />
         </div>
       ) : (

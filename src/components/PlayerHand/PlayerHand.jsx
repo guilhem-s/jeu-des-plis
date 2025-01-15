@@ -5,36 +5,32 @@ import './PlayerHand.css';
 
 function PlayerHand({ hand, onPlayCard, isCurrentPlayer, isLocalPlayer, atout, demandedCouleur }) {
   const [playableCards, setPlayableCards] = useState([]);
-  /**
-   * Determines which cards are playable based on the game rules.
-   */
+
+  // Détermine quelles cartes sont jouables
   useEffect(() => {
     const determinePlayableCards = () => {
       if (!isCurrentPlayer || !isLocalPlayer) {
-        return hand.map(() => false); // Not the player's turn
+        return hand.map(() => false); // Pas le tour du joueur
       }
 
-      // If no color is demanded yet, all cards are playable
       if (!demandedCouleur) {
         return hand.map(() => true);
       }
 
-      // Check if the player has any cards matching the demanded color
       const hasDemandedCouleur = hand.some((card) => card.couleur === demandedCouleur);
 
       return hand.map((card) => {
         if (hasDemandedCouleur) {
-          return card.couleur === demandedCouleur;  // Must follow color
+          return card.couleur === demandedCouleur;
         }
 
         const hasAtout = hand.some((c) => c.couleur === atout);
         if (hasAtout) {
-          return card.couleur === atout;  // Must play trump if no demanded color
+          return card.couleur === atout;
         }
 
-        return true;  // Otherwise, any card is allowed
+        return true;
       });
-
     };
 
     setPlayableCards(determinePlayableCards());
@@ -43,14 +39,13 @@ function PlayerHand({ hand, onPlayCard, isCurrentPlayer, isLocalPlayer, atout, d
   return (
     <div className={`player-hand ${isLocalPlayer ? 'current-player' : 'other-player'}`}>
       {hand.map((card, index) => {
-        const displayedCard = isLocalPlayer ? card : { valeur: 'verso', couleur: 'carte' };
         const isPlayable = isCurrentPlayer && playableCards[index];
         const isGrayed = isCurrentPlayer && !playableCards[index];
 
         return (
           <Card
             key={index}
-            card={displayedCard}
+            card={card}
             isPlayable={isPlayable}
             isGrayed={isGrayed}
             onClick={isPlayable ? onPlayCard : null}
